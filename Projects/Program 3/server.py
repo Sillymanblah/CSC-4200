@@ -42,6 +42,7 @@ if __name__ == '__main__':
             print("\nServer is listening on", host, "\n")
         except OSError:
             print("\nOSError: Socket listen failed.")
+            
         while True:
             # Wait for a client to connect
             try:
