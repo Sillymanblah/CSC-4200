@@ -65,7 +65,6 @@ if __name__ == '__main__':
                 logging.info('Received "{}" from client'.format(message))
 
                 # send hello packet to client
-                # create packet (server_hello) to send                
                 try:
                     conn.send(server_hello)
                 except socket.error:
@@ -88,7 +87,7 @@ if __name__ == '__main__':
                     if message_type == 1 and command == "LIGHTON":
                         print("EXECUTING SUPPORTED COMMAND: LIGHTON")
                         print("Returning SUCCESS")
-                        logging.info("EXECUTING SUPPORTED COMMAND: LIGHTON")
+                        logging.info("EXECUTING SUPPORTED COMMAND: {command}")
 
                     # Message Type = 2 --> LIGHT OFF
                     elif message_type == 2 and command == "LIGHTOFF":
@@ -98,11 +97,14 @@ if __name__ == '__main__':
 
                     # Any other message type is not supported
                     else:
-                        print("IGNORING UNKNOWN COMMAND: {}".format(message_type))
-                        logging.info("RECEIVED UNKNOWN COMMAND: {}".format(message_type))
+                        print("IGNORING UNKNOWN COMMAND: {command})
+                        logging.info("RECEIVED UNKNOWN COMMAND: {command})
+                        
+                    # create (server_success) packet
+                    success = 'SUCCESS'                
+                    server_success = create_packet(version, message_type, message_length, success)
 
                     # send SUCCESS packet to client
-                    # create packet(server_success) to send
                     try:
                         conn.send(server_success)
                     except socket.error:
