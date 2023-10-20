@@ -1,6 +1,6 @@
 def create_packet(version, message_type, message_length, message):
     # Encode message
-    message_encoded = encode(message)
+    message_encoded = message.encode()
         
     # Use the python struct module to create a fixed length header
     header = build_header(version, message_type, message_length)
