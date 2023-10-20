@@ -54,11 +54,16 @@ if __name__ == '__main__':
             logging.info("Received connection from <", addr, ",", port, ">")
             while True:
                 # Receive and unpack HELLO packet
+                hello_ver = receive(conn, header_format)[0]
+                hello_msg_type = receive(conn, header_format)[2]
+                hello_msg_length = receive(conn, header_format)[3]
                 hello = receive(conn, header_format)[4]
                 logging.info("Received {hello} from client")
 
+                # create (server_hello) packet
+                server_hello = create_packet(hello_ver, hello_msg_type, hello_msg_length, hello_msg)
+
                 # send hello packet to client
-                # create packet (server_hello) to send                
                 try:
                     conn.send(server_hello)
                 except socket.error:
@@ -67,6 +72,8 @@ if __name__ == '__main__':
                 # Receive and unpack COMMAND packet
                 version = receive(conn, header_format)[0]
                 message_type = receive(conn, header_format)[2]
+                message_length = receive(conn, header_format)[3]
+                command = receive(conn, header_format)[4]
     
                 # Check if version is correct value
                 if version != 17:
@@ -80,22 +87,25 @@ if __name__ == '__main__':
 
                     # Message Type = 1 --> LIGHT ON
                     if message_type == 1:
-                        print("EXECUTING SUPPORTED COMMAND: LIGHTON")
+                        print("EXECUTING SUPPORTED COMMAND: {command}")
                         print("Returning SUCCESS")
-                        logging.info("EXECUTING SUPPORTED COMMAND: LIGHTON")
+                        logging.info("EXECUTING SUPPORTED COMMAND: {command}")
 
                     # Message Type = 2 --> LIGHT OFF
                     elif message_type == 2:
-                        print("EXECUTING SUPPORTED COMMAND: LIGHTOFF")
-                        logging.info("EXECUTING SUPPORTED COMMAND: LIGHTOFF")
+                        print("EXECUTING SUPPORTED COMMAND: {command}")
+                        logging.info("EXECUTING SUPPORTED COMMAND: {command}")
 
                     # Any other message type is not supported
                     else:
-                        print("IGNORING UNKNOWN COMMAND: {}".format(message_type))
-                        logging.info("RECEIVED UNKNOWN COMMAND: {}".format(message_type))
+                        print("IGNORING UNKNOWN COMMAND: {command})
+                        logging.info("RECEIVED UNKNOWN COMMAND: {command})
+                        
+                    # create (server_success) packet
+                    success = 'SUCCESS'                
+                    server_success = create_packet(version, message_type, message_length, success)
 
                     # send SUCCESS packet to client
-                    # create packet(server_success) to send
                     try:
                         conn.send(server_success)
                     except socket.error:
