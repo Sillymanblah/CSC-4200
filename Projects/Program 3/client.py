@@ -8,7 +8,6 @@
 
 import argparse
 import socket
-import struct
 import logging
 # Collecting all the shared functions from our extra files.
 from connection_handling import *
@@ -34,24 +33,32 @@ if (__name__ == '__main__'):
 
     # Acquiring the data from the parser in a tuple that can be broken later.
     args = parser.parse_args()
+    
+    # Configure logging settings
+    logging.basicConfig(filename=parser.log_file, level=logging.INFO, format='[%(asctime)s] %(levelname)s: %(message)s')
 
     # Opening a socket for the client using with so it will auto close.
     with socket.socket() as client:
     
         # Putting the whole thing in a try so we can catch and handle exceptions that break the flow at the end.
         try:
+            # We are not connected, now try to connect
+            connected = False
+
             # Trying to connect the server 5 times:
             for tries in range(1,6):
                 try:
-                    # Trying to connect using the parser arguments.
+                    # Using the parser arguments to do so.
                     client.connect((parser.server, parser.port))
-                    # Variable to catch if we actually connected.
+                    # Variable set if we actually connected.
                     connected = True
                 except socket.error as exc:
-                    print('Attempt %s failed...', tries)
+                    print('Server connection attempt #%s failed...', tries)
                     print(exc)
 
-
+            if (not connected):
+                raise socket.error('Server failed to respond 5 times, make sure it is online and reachable and try agian.')
+            
             ## We start by sending a greeting to the server:
 
             # Asking the user for a message to greet the server.
@@ -59,14 +66,8 @@ if (__name__ == '__main__'):
             # Type does not matter here.
             message_type = 0
 
-            # Building the header out of a tuple of 3 integers, as required.
-            header = build_header((VERSION, message_type, len(message)))
-
-            # Encoding the message to transfer.
-            data = message.encode()
-
-            # Here is the packet we will send across the network.
-            packet = header + data
+            # Get our packet to send across the network.
+            packet = create_packet(VERSION, message_type, len(message), message)
 
             # Performing the transmissions across the network.
             try:
@@ -76,7 +77,7 @@ if (__name__ == '__main__'):
                 raise new_exc from exc
 
             try:
-                receive_packet(client)
+                packet = receive_packet(client)
             except socket.error as exc:
                 new_exc = socket.error('Packet recieve from server failed...\n')
                 raise new_exc from exc
@@ -93,17 +94,24 @@ if (__name__ == '__main__'):
             else:
                 message_type = 0
 
-            # Building the header to use.
-            header = build_header((VERSION, message_type, len(command)))
+            # Get our packet to send across the network.
+            command_packet = create_packet(VERSION, message_type, len(command), command)
 
-            # Encoding the command to transfer.
-            data = command.encode()
+            # Second transmission on the network
+            try:
+                client.send(command_packet)
+            except socket.error as exc:
+                new_exc = socket.error('Packet send to server failed...\n')
+                raise new_exc from exc
 
-            # Creating the packet:
-            command_packet = header + data
+            try:
+                success_packet = receive_packet(client)
+            except socket.error as exc:
+                new_exc = socket.error('Packet recieve from server failed...\n')
+                raise new_exc from exc
 
-            # Sending it across the network
-            client.send(command_packet)
-
+        except socket.error as exc:
+            print('There appears to have been an error with network communications:')
+            print(exc)
         except:
             pass

@@ -4,10 +4,10 @@
 
 import argparse
 import socket
-import struct
 import logging
-import connection_handling
-import packet_handling
+# Collecting our personal functions:
+from connection_handling import *
+from packet_handling import *
 
 if __name__ == '__main__':
     # Server takes 2 arguments: port & log file location
@@ -54,8 +54,15 @@ if __name__ == '__main__':
             logging.info("Received connection from <", addr, ",", port, ">")
             while True:
                 # Receive and unpack HELLO packet
-                hello = receive(conn, header_format)[4]
-                logging.info("Received {hello} from client")
+                try:
+                    version, message_type, message_length, message = receive_packet(conn)
+                except socket.error as exc:
+                    logging.error('Packet recieve from client failed')
+                except ValueError as exc:
+                    logging.error(exc)
+                    continue
+                
+                logging.info('Received "{}" from client'.format(message))
 
                 # send hello packet to client
                 # create packet (server_hello) to send                
@@ -65,11 +72,10 @@ if __name__ == '__main__':
                     print("\nFailed to send.")
 
                 # Receive and unpack COMMAND packet
-                version = receive(conn, header_format)[0]
-                message_type = receive(conn, header_format)[2]
+                version, message_type, message_length, command = receive_packet(conn)
     
                 # Check if version is correct value
-                if version != 17:
+                if version != 17: # We can probably remove this because the recieve function will handle it.
                     print("VERSION MISMATCH. Return to listening.")
                     logging.info("VERSION MISMATCH. Return to listening.")
                     continue
@@ -79,14 +85,15 @@ if __name__ == '__main__':
                     logging.info("VERSION ACCEPTED")
 
                     # Message Type = 1 --> LIGHT ON
-                    if message_type == 1:
+                    if message_type == 1 and command == "LIGHTON":
                         print("EXECUTING SUPPORTED COMMAND: LIGHTON")
                         print("Returning SUCCESS")
                         logging.info("EXECUTING SUPPORTED COMMAND: LIGHTON")
 
                     # Message Type = 2 --> LIGHT OFF
-                    elif message_type == 2:
+                    elif message_type == 2 and command == "LIGHTOFF":
                         print("EXECUTING SUPPORTED COMMAND: LIGHTOFF")
+                        print("Returning SUCCESS")
                         logging.info("EXECUTING SUPPORTED COMMAND: LIGHTOFF")
 
                     # Any other message type is not supported
@@ -101,5 +108,3 @@ if __name__ == '__main__':
                     except socket.error:
                         print("\nFailed to send.")
 
-            # Close the client socket
-            conn.close()

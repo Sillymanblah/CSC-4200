@@ -9,27 +9,28 @@
 
 import struct
 import socket
+import logging
 
 def unpack_packet(conn: socket, header_format: struct = struct.Struct('!3I')):
     # TODO: Implement header unpacking based on received bytes
     header_size = struct.calcsize(header_format)
     header_data = conn.recv(header_size)
     unpacked_header = struct.unpack(header_format, header_data)
-
-    # TODO: Create a string from the header fields
-    packet_header_as_string = f"Received Data: {unpacked_header}"
     
-    # return the string - this will be the payload
-    return unpacked_header, packet_header_as_string
+    # return the header tuple - this will be the payload
+    return unpacked_header
 
 # Could not decide whether I wanted to do this as a default value or
 def receive_packet(conn: socket, header_format: struct = struct.Struct('!3I')):
-    # receive packet header and message
-    version, header_length, message_type, message_length = unpack_packet(conn, header_format)[0]
+    # receive packet header from the function and break the tuple and message
+    (version, message_type, message_length) = unpack_packet(conn, header_format)[0]
     client_message = conn.recv(message_length)
     message_decoded = client_message.decode()
 
-    # Print Header
-    print("Received Data: version: {}, message_type: {}, length: {}\n".format(version, message_type, message_length))
+    # Logging the header information
+    logging.info("Received Data: version: {}, message_type: {}, length: {}\n".format(version, message_type, message_length))
 
-    return version, header_length, message_type, message_length, message_decoded
+    if (version != 17):
+        raise ValueError('VERSION MISMATCH')
+
+    return version, message_type, message_length, message_decoded
