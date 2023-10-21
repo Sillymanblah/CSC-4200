@@ -117,14 +117,14 @@ if __name__ == '__main__':
 
                     # Any other message type is not supported
                     else:
-                        print("IGNORING UNKNOWN COMMAND: {command}")
-                        logging.info("RECEIVED UNKNOWN COMMAND: {command}")
+                        print("IGNORING UNKNOWN COMMAND: {}".format(command))
+                        logging.info("RECEIVED UNKNOWN COMMAND: {}".format(command))
                         success = 'FAILURE'
                         
                     # create (server_success) packet
-                    server_success = create_packet(VERSION, message_type, message_length, success)
+                    server_success = create_packet(VERSION, message_type, len(success), success)
 
-                    logging.info('Returning SUCCESS')
+                    logging.info('Returning {}'.format(success))
                     # send SUCCESS packet to client
                     try:
                         conn.send(server_success)
