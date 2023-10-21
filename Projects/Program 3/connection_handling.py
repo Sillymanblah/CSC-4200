@@ -28,7 +28,7 @@ def receive_packet(conn: socket, header_format: str = '!3I'):
     message_decoded = client_message.decode()
 
     # Logging the header information
-    logging.info("Received Data: version: {}, message_type: {}, length: {}\n".format(version, message_type, message_length))
+    logging.info("Received Data: version: {}, message_type: {}, length: {}".format(version, message_type, message_length))
 
     if (version != 17):
         raise ValueError('VERSION MISMATCH')

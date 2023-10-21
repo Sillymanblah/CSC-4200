@@ -4,7 +4,7 @@ import struct
 # tuple for this program, so the header type defaults to a 3 unsigned int struct. This is a simple
 # function, but might be useful?
 def build_header(header_data: tuple, header_encoder: struct = struct.Struct('!3I')):
-    return header_encoder.pack(header_data)
+    return header_encoder.pack(*header_data)
 
 # This will handle the actual packet creation for sending across the network.
 def create_packet(version, message_type, message_length, message):
