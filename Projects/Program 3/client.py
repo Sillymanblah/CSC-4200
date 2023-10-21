@@ -87,7 +87,7 @@ if (__name__ == '__main__'):
             version, message_type, message_length, server_message = packet_tuple
 
             # Logging the server response.
-            logging.info('Received message: "{server_message}"')
+            logging.info('Received message: "{}"'.format(server_message))
 
             ## Now we need to send the command:
 
@@ -125,7 +125,7 @@ if (__name__ == '__main__'):
             version, message_type, message_length, success = packet_tuple
 
             # Printing success data.
-            logging.info('Received message: "{success}"')
+            logging.info('Received message: "{}"'.format(success))
             if (success == 'SUCCESS'):
                 logging.info('Command Successful')
 
