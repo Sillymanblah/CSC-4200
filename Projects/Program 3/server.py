@@ -41,7 +41,7 @@ if __name__ == '__main__':
         # Listen for incoming connections
         try:
             s.listen()
-            print("\nServer is listening on {host}:{port}\n")
+            print("\nServer is listening on {}:{}\n".format(host,port))
         except OSError:
             print("\nOSError: Socket listen failed.")
             
@@ -51,10 +51,11 @@ if __name__ == '__main__':
                 conn, addr = s.accept()
             except KeyboardInterrupt:
                 print("\nAccept operation interrupted by keyboard input. Connection ended.")
+                continue # If connection fails, we need to not try to use it and instead listen
             
             with conn:
-                print("Received connection from (IP, PORT): ('", addr, "', ", port, ")" )
-                logging.info("Received connection from <", addr, ",", port, ">")
+                print("Received connection from (IP, PORT): ", addr )
+                logging.info("Received connection from {}".format(addr))
             
                 # Receive and unpack HELLO packet
                 try:
