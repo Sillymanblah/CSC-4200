@@ -14,8 +14,8 @@ VERSION = 17
 if __name__ == '__main__':
     # Server takes 2 arguments: port & log file location
     parser = argparse.ArgumentParser(description="Light Server Argument Parser")
-    parser.add_argument('--port', type=int, required=True, help='Port server listens on')
-    parser.add_argument('--log_file_location', type=str, required=True, help='Log File location that stores record of actions')
+    parser.add_argument('--port', '-p', type=int, required=True, help='Port server listens on')
+    parser.add_argument('--log_file_location', '-l', type=str, required=True, help='Log File location that stores record of actions')
 
     args = parser.parse_args()
 
@@ -41,7 +41,7 @@ if __name__ == '__main__':
         # Listen for incoming connections
         try:
             s.listen()
-            print("\nServer is listening on", host, "\n")
+            print("\nServer is listening on {host}:{port}\n")
         except OSError:
             print("\nOSError: Socket listen failed.")
             

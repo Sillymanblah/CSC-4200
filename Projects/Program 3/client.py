@@ -27,9 +27,9 @@ def get_message(max_size: int = None, specification: str = 'message'):
 if (__name__ == '__main__'):
     # Parser to get the server, port, and logfile.
     parser = argparse.ArgumentParser(description='Parser for the client of the light-server program.')
-    parser.add_argument('--server', type=str, required=True, help='Server IP address')
-    parser.add_argument('--port', type=int, required=True, help='Server port address')
-    parser.add_argument('--log_file', type=str, required=True, help='The file the client logs to')
+    parser.add_argument('--server', '-s', type=str, required=True, help='Server IP address')
+    parser.add_argument('--port', '-p', type=int, required=True, help='Server port address')
+    parser.add_argument('--log_file', '-l', type=str, required=True, help='The file the client logs to')
 
     # Acquiring the data from the parser in a tuple that can be broken later.
     args = parser.parse_args()
