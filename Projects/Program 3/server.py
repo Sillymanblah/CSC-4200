@@ -44,7 +44,8 @@ if __name__ == '__main__':
             print("\nServer is listening on {}:{}\n".format(host,port))
         except OSError:
             print("\nOSError: Socket listen failed.")
-            
+        
+        logging.info('Server started and is listening for connections')
         while True:
             # Wait for a client to connect
             try:
