@@ -97,37 +97,36 @@ if __name__ == '__main__':
                 #     logging.info("VERSION MISMATCH. Return to listening.")
                 #     continue
 
+                print("VERSION ACCEPTED")
+                logging.info("VERSION ACCEPTED")
+
+                # Message Type = 1 --> LIGHT ON
+                if message_type == 1 and command == "LIGHTON":
+                    print("EXECUTING SUPPORTED COMMAND: LIGHTON")
+                    print("Returning SUCCESS")
+                    logging.info("EXECUTING SUPPORTED COMMAND: LIGHTON")
+                    success = 'SUCCESS'
+
+                # Message Type = 2 --> LIGHT OFF
+                elif message_type == 2 and command == "LIGHTOFF":
+                    print("EXECUTING SUPPORTED COMMAND: LIGHTOFF")
+                    print("Returning SUCCESS")
+                    logging.info("EXECUTING SUPPORTED COMMAND: LIGHTOFF")
+                    success = 'SUCCESS'
+
+                # Any other message type is not supported
                 else:
-                    print("VERSION ACCEPTED")
-                    logging.info("VERSION ACCEPTED")
+                    print("IGNORING UNKNOWN COMMAND: {}".format(command))
+                    logging.info("RECEIVED UNKNOWN COMMAND: {}".format(command))
+                    success = 'FAILURE'
+                    
+                # create (server_success) packet
+                server_success = create_packet(VERSION, message_type, len(success), success)
 
-                    # Message Type = 1 --> LIGHT ON
-                    if message_type == 1 and command == "LIGHTON":
-                        print("EXECUTING SUPPORTED COMMAND: LIGHTON")
-                        print("Returning SUCCESS")
-                        logging.info("EXECUTING SUPPORTED COMMAND: LIGHTON")
-                        success = 'SUCCESS'
-
-                    # Message Type = 2 --> LIGHT OFF
-                    elif message_type == 2 and command == "LIGHTOFF":
-                        print("EXECUTING SUPPORTED COMMAND: LIGHTOFF")
-                        print("Returning SUCCESS")
-                        logging.info("EXECUTING SUPPORTED COMMAND: LIGHTOFF")
-                        success = 'SUCCESS'
-
-                    # Any other message type is not supported
-                    else:
-                        print("IGNORING UNKNOWN COMMAND: {}".format(command))
-                        logging.info("RECEIVED UNKNOWN COMMAND: {}".format(command))
-                        success = 'FAILURE'
-                        
-                    # create (server_success) packet
-                    server_success = create_packet(VERSION, message_type, len(success), success)
-
-                    logging.info('Returning {}'.format(success))
-                    # send SUCCESS packet to client
-                    try:
-                        conn.send(server_success)
-                    except socket.error:
-                        print("\nFailed to send.")
+                logging.info('Returning {}'.format(success))
+                # send SUCCESS packet to client
+                try:
+                    conn.send(server_success)
+                except socket.error:
+                    print("\nFailed to send.")
 
