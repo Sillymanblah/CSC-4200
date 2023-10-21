@@ -25,40 +25,36 @@ def get_message(max_size: int = None, specification: str = 'message'):
 
 # Main implementation for the client:
 if (__name__ == '__main__'):
-    # Parser to get the server, port, and logfile
+    # Parser to get the server, port, and logfile.
     parser = argparse.ArgumentParser(description='Parser for the client of the light-server program.')
     parser.add_argument('--server', type=str, required=True, help='Server IP address')
     parser.add_argument('--port', type=int, required=True, help='Server port address')
-    parser.add_argument('--log_file', type=str, required=True, help='The file this document logs to')
+    parser.add_argument('--log_file', type=str, required=True, help='The file the client logs to')
 
     # Acquiring the data from the parser in a tuple that can be broken later.
     args = parser.parse_args()
     
     # Configure logging settings
-    logging.basicConfig(filename=parser.log_file, level=logging.INFO, format='[%(asctime)s] %(levelname)s: %(message)s')
+    logging.basicConfig(filename=parser.log_file, level=logging.INFO, format='[%(asctime)s] %(levelname)s: %(message)s', filemode='a')
 
     # Opening a socket for the client using with so it will auto close.
     with socket.socket() as client:
     
         # Putting the whole thing in a try so we can catch and handle exceptions that break the flow at the end.
         try:
-            # We are not connected, now try to connect
-            connected = False
-
             # Trying to connect the server 5 times:
             for tries in range(1,6):
                 try:
                     # Using the parser arguments to do so.
                     client.connect((parser.server, parser.port))
-                    # Variable set if we actually connected.
-                    connected = True
                 except socket.error as exc:
-                    print('Server connection attempt #%s failed...', tries)
-                    print(exc)
+                    logging.error('Server connection attempt #%s failed...', tries)
+                    logging.error(exc)
+                    
+                    # If we are on our 5th failure:
+                    if (tries == 5):
+                        raise socket.error('Server failed to respond 5 times, make sure it is online and reachable and try agian.')
 
-            if (not connected):
-                raise socket.error('Server failed to respond 5 times, make sure it is online and reachable and try agian.')
-            
             ## We start by sending a greeting to the server:
 
             # Asking the user for a message to greet the server.
@@ -69,18 +65,28 @@ if (__name__ == '__main__'):
             # Get our packet to send across the network.
             packet = create_packet(VERSION, message_type, len(message), message)
 
+            logging.info('Sending HELLO packet')
             # Performing the transmissions across the network.
             try:
                 client.send(packet)
             except socket.error as exc:
-                new_exc = socket.error('Packet send to server failed...\n')
-                raise new_exc from exc
+                send_exc = socket.error('Packet send to server failed...\n')
+                raise send_exc from exc
 
             try:
-                packet = receive_packet(client)
+                packet_tuple = receive_packet(client)
             except socket.error as exc:
-                new_exc = socket.error('Packet recieve from server failed...\n')
-                raise new_exc from exc
+                receive_exc = socket.error('Packet recieve from server failed...\n')
+                raise receive_exc from exc
+
+            # We are able to just say accepted because the receive packet function throws an error if there is a mismatch
+            logging.info('VERSION ACCEPTED')
+            
+            # Breaking the packet tuple.
+            version, message_type, message_length, server_message = packet_tuple
+
+            # Logging the server response.
+            logging.info('Received message: "{server_message}"')
 
             ## Now we need to send the command:
 
@@ -95,23 +101,44 @@ if (__name__ == '__main__'):
                 message_type = 0
 
             # Get our packet to send across the network.
-            command_packet = create_packet(VERSION, message_type, len(command), command)
+            packet = create_packet(VERSION, message_type, len(command), command)
 
+            logging.info('Sending command packet')
             # Second transmission on the network
             try:
-                client.send(command_packet)
+                client.send(packet)
             except socket.error as exc:
-                new_exc = socket.error('Packet send to server failed...\n')
-                raise new_exc from exc
+                send_exc = socket.error('Packet send to server failed...\n')
+                raise send_exc from exc
 
             try:
-                success_packet = receive_packet(client)
+                packet_tuple = receive_packet(client)
             except socket.error as exc:
-                new_exc = socket.error('Packet recieve from server failed...\n')
-                raise new_exc from exc
+                receive_exc = socket.error('Packet recieve from server failed...\n')
+                raise receive_exc from exc
+            
+            # Again we know the version is correct.
+            logging.info('VERSION ACCEPTED')
 
+            # Break the tuple apart.
+            version, message_type, message_length, success = packet_tuple
+
+            # Printing success data.
+            logging.info('Received message: "{success}"')
+            if (success == 'SUCCESS'):
+                logging.info('Command Successful')
+
+        # Catching all our errors.
         except socket.error as exc:
-            print('There appears to have been an error with network communications:')
-            print(exc)
-        except:
-            pass
+            logging.error('There appears to have been an error with network communications:')
+            logging.error(exc)
+        except ValueError as exc:
+            logging.error('There seems to have been an issue with a function value:')
+            logging.error(exc)
+        except exc:
+            logging.error('An unknown error occured:')
+            logging.error(exc)
+        # If no errors occured:
+        else:
+            logging.info('Successful server communication, closing the socket.')
+

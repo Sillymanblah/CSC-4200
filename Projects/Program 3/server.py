@@ -22,7 +22,7 @@ if __name__ == '__main__':
     log_location = args.log_file_location
 
     # Configure logging settings
-    logging.basicConfig(filename=log_location, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    logging.basicConfig(filename=log_location, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', filemode='a')
 
     # Specify the header format
     # header_format = 'BBBH'
@@ -59,7 +59,7 @@ if __name__ == '__main__':
                 except socket.error as exc:
                     logging.error('Packet recieve from client failed')
                 except ValueError as exc:
-                    logging.error(exc)
+                    logging.error(exc) # This catches a version mismatch
                     continue
                 
                 logging.info('Received "{}" from client'.format(message))
@@ -70,8 +70,14 @@ if __name__ == '__main__':
                 except socket.error:
                     print("\nFailed to send.")
 
-                # Receive and unpack COMMAND packet
-                version, message_type, message_length, command = receive_packet(conn)
+                # Receive and unpack COMMAND packettry:
+                try:
+                    version, message_type, message_length, command = receive_packet(conn)
+                except socket.error as exc:
+                    logging.error('Packet recieve from client failed')
+                except ValueError as exc:
+                    logging.error(exc) # This catches a version mismatch
+                    continue
     
                 # Check if version is correct value
                 if version != 17: # We can probably remove this because the recieve function will handle it.
@@ -87,7 +93,7 @@ if __name__ == '__main__':
                     if message_type == 1 and command == "LIGHTON":
                         print("EXECUTING SUPPORTED COMMAND: LIGHTON")
                         print("Returning SUCCESS")
-                        logging.info("EXECUTING SUPPORTED COMMAND: {command}")
+                        logging.info("EXECUTING SUPPORTED COMMAND: LIGHTON")
 
                     # Message Type = 2 --> LIGHT OFF
                     elif message_type == 2 and command == "LIGHTOFF":
@@ -97,8 +103,8 @@ if __name__ == '__main__':
 
                     # Any other message type is not supported
                     else:
-                        print("IGNORING UNKNOWN COMMAND: {command})
-                        logging.info("RECEIVED UNKNOWN COMMAND: {command})
+                        print("IGNORING UNKNOWN COMMAND: {command}")
+                        logging.info("RECEIVED UNKNOWN COMMAND: {command}")
                         
                     # create (server_success) packet
                     success = 'SUCCESS'                
