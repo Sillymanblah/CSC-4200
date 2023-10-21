@@ -35,7 +35,7 @@ if (__name__ == '__main__'):
     args = parser.parse_args()
     
     # Configure logging settings
-    logging.basicConfig(filename=parser.log_file, level=logging.INFO, format='[%(asctime)s] %(levelname)s: %(message)s', filemode='a')
+    logging.basicConfig(filename=args.log_file, level=logging.INFO, format='[%(asctime)s] %(levelname)s: %(message)s', filemode='a')
 
     # Opening a socket for the client using with so it will auto close.
     with socket.socket() as client:
@@ -46,7 +46,8 @@ if (__name__ == '__main__'):
             for tries in range(1,6):
                 try:
                     # Using the parser arguments to do so.
-                    client.connect((parser.server, parser.port))
+                    client.connect((args.server, args.port))
+                    break
                 except socket.error as exc:
                     logging.error('Server connection attempt #%s failed...', tries)
                     logging.error(exc)
