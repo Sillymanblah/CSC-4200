@@ -25,7 +25,7 @@ if __name__ == '__main__':
     logging.basicConfig(filename=log_location, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', filemode='a')
 
     # Specify the header format
-    # header_format = 'BBBH'
+    header_format = '3I'
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         # Bind the socket to the server address
@@ -42,17 +42,18 @@ if __name__ == '__main__':
             print("\nServer is listening on", host, "\n")
         except OSError:
             print("\nOSError: Socket listen failed.")
-
-        # Wait for a client to connect
-        try:
-            conn, addr = s.accept()
-        except KeyboardInterrupt:
-            print("\nAccept operation interrupted by keyboard input. Connection ended.")
             
-        with conn:
-            print("Received connection from (IP, PORT): ('", addr, "', ", port, ")" )
-            logging.info("Received connection from <", addr, ",", port, ">")
-            while True:
+        while True:
+            # Wait for a client to connect
+            try:
+                conn, addr = s.accept()
+            except KeyboardInterrupt:
+                print("\nAccept operation interrupted by keyboard input. Connection ended.")
+            
+            with conn:
+                print("Received connection from (IP, PORT): ('", addr, "', ", port, ")" )
+                logging.info("Received connection from <", addr, ",", port, ">")
+            
                 # Receive and unpack HELLO packet
                 try:
                     version, message_type, message_length, message = receive_packet(conn)
