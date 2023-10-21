@@ -11,7 +11,7 @@ import struct
 import socket
 import logging
 
-def unpack_packet(conn: socket, header_format: struct = struct.Struct('!3I')):
+def unpack_packet(conn: socket, header_format: str):
     # TODO: Implement header unpacking based on received bytes
     header_size = struct.calcsize(header_format)
     header_data = conn.recv(header_size)
@@ -21,9 +21,9 @@ def unpack_packet(conn: socket, header_format: struct = struct.Struct('!3I')):
     return unpacked_header
 
 # Could not decide whether I wanted to do this as a default value or
-def receive_packet(conn: socket, header_format: struct = struct.Struct('!3I')):
+def receive_packet(conn: socket, header_format: str = '!3I'):
     # receive packet header from the function and break the tuple and message
-    (version, message_type, message_length) = unpack_packet(conn, header_format)[0]
+    (version, message_type, message_length) = unpack_packet(conn, header_format)
     client_message = conn.recv(message_length)
     message_decoded = client_message.decode()
 
