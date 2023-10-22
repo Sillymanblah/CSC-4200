@@ -19,7 +19,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    host = "127.0.0.1" # There might be a way to set this up so the computer finds its own port.
+    host = "10.128.0.3" # There might be a way to set this up so the computer finds its own port.
     port = args.port
     log_location = args.log_file_location
 
