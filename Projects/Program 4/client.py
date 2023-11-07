@@ -1,8 +1,7 @@
 # Title: Client.py
-# Authors: John Grzegorczyk
-# Date: 10/19/2023
-# Description: Client file for Program 3 of CSC-4200 (Networks)
-# Purpose: Establish a connection to a server and send a command for the program to run.
+# Date: 11/7/2023
+# Description: Client file for Program 4 of CSC-4200 (Networks)
+# Purpose: Establish a connection to a server and send a command based on a sensor input.
 # Required files:
 #       connection_handling.py  packet_handling.py 
 

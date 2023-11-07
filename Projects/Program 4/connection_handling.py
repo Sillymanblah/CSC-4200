@@ -1,8 +1,6 @@
 # Title: connection_handling.py
-# Authors: John Grzegorczyk (Creator/editor of the file)
-#          Madison Kellione (Author of the code)
-# Date: 10/18/2023
-# Description: Connections helper file for Program 3 of CSC-4200 (Networks)
+# Date: 11/7/2023
+# Description: Connections helper file for Program 4 of CSC-4200 (Networks)
 # Purpose: Use a connection to a client/server to send and recieve built packets.
 # Required files:
 #       connection_handling.py  packet_handling.py 

@@ -1,6 +1,9 @@
-# server.py
-#   Server accepts connections, receives custom packets from clients, logs actions, and executes
-#       command for LIGHT ON/OFF.
+# Title: Server.py
+# Date: 11/7/2023
+# Description: Client file for Program 4 of CSC-4200 (Networks)
+# Purpose: Accept connections from clients and perform commands on a light.
+# Required files:
+#       connection_handling.py  packet_handling.py 
 
 import argparse
 import socket

@@ -1,3 +1,10 @@
+# Title: connection_handling.py
+# Date: 11/7/2023
+# Description: Packet's helper file for Program 4 of CSC-4200 (Networks)
+# Purpose: To simplify the creation of packets and headers for the program.
+# Required files:
+#       connection_handling.py  packet_handling.py
+ 
 import struct
 
 # This function creates the header for the data, it is safe to assume the type will be a 3 integer
