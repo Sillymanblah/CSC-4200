@@ -8,11 +8,13 @@
 import argparse
 import socket
 import logging
+import random
 from threading import Thread
 import termios, sys, tty
 # Collecting all the shared functions from our extra files.
 from connection_handling import *
 from packet_handling import *
+from PIR_Sensor import PollPIR
 
 # Fun extra work
 def keyboard_wait():
@@ -30,7 +32,7 @@ def keyboard_wait():
 def client_handshake( conn: socket.socket ):
     try:
         # Create a sequence number for the communication.
-        seq_num = generate_seq()
+        seq_num = random.randint(1000, 10000) # Max size of seq_num is 4,000,000,000
 
         # Create header
         header = build_header( seq_num=seq_num, ack_num=0, ack='N', syn='Y', fin='N' )

@@ -6,9 +6,10 @@ import struct
 # This function creates the header for the data, it is safe to assume the type will be a 3 integer
 # tuple for this program, so the header type defaults to a 3 unsigned int struct. This is a simple
 # function, but might be useful?
-def build_header(**kwargs):
-    data = struct.pack('!I', seq_num) #pack the version
-    data = struct.pack('!I', ack_num) #pack the acknowledgement number
+def build_header(**kwargs): # From what I have seen, the way to use kwargs is by calling values of it, we might want to use args instead.
+    data = struct.pack('!I', seq_num) #pack the version 
+    data += struct.pack('!I', ack_num) #pack the acknowledgement number
+    data += struct.pack("!x") # Pad byte
     data += struct.pack("!c", ack) #pack the ACK
     data += struct.pack("!c", syn) #pack the SYN
     data += struct.pack("!c", fin) #pack the FIN
