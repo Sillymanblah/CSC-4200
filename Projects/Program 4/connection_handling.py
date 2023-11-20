@@ -1,9 +1,5 @@
-# Title: connection_handling.py
-# Date: 11/7/2023
-# Description: Connections helper file for Program 4 of CSC-4200 (Networks)
-# Purpose: Use a connection to a client/server to send and recieve built packets.
-# Required files:
-#       connection_handling.py  packet_handling.py 
+# connection_handling.py
+# Madison Kellione
 
 import struct
 import socket
@@ -18,17 +14,22 @@ def unpack_packet(conn: socket, header_format: str):
     # return the header tuple - this will be the payload
     return unpacked_header
 
-# Could not decide whether I wanted to do this as a default value or
 def receive_packet(conn: socket, header_format: str = '!3I'):
     # receive packet header from the function and break the tuple and message
-    (version, message_type, message_length) = unpack_packet(conn, header_format)
-    client_message = conn.recv(message_length)
-    message_decoded = client_message.decode()
+    (seq_num, ack_num, ack, syn, fin) = unpack_packet(conn, header_format)
 
-    # Logging the header information
-    logging.info("Received Data: version: {}, message_type: {}, length: {}".format(version, message_type, message_length))
+    # receive payload from a packet and decode
+    client_payload = conn.recv(4)        #4 bytes = 32 bits
+    payload_decoded = client_payload.decode()
 
-    if (version != 17):
-        raise ValueError('VERSION MISMATCH')
+    return seq_num, ack_num, ack, syn, fin, payload_decoded
 
-    return version, message_type, message_length, message_decoded
+def log_packet(action, seq_num, ack_num, ack, syn, fin)
+    # need an "IF" statement to differentiate
+    if (action = "RECV"):
+        # Logging the header information on server
+        logging.info(action, <Sequence Number: {}> <Acknowledgment Number: {}> [ACK: {}] [SYN: {}] [FIN:{}]".format(seq_num, ack_num, ack, syn, fin))
+
+    else:
+        # Logging the header information on client
+        logging.info(action, <Sequence Number: {}> <Acknowledgment Number: {}> [ACK: {}] [SYN: {}] [FIN:{}]".format(seq_num, ack_num, ack, syn, fin))
