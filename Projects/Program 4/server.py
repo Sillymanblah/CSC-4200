@@ -9,7 +9,7 @@ import argparse
 import socket
 import logging
 # Between multiprocessing and multithreading, multithreading seems to work a little better for what we are doing here.
-import threading
+from threading import Thread
 import random # Necessary to send SYN
 # Collecting our personal functions:
 from connection_handling import *
@@ -17,6 +17,18 @@ from packet_handling import *
 from LED import BlinkLed
 
 VERSION = 17
+
+def server_handshake(conn: socket.socket):
+
+    # Need to type this.
+
+    return (seq_num, ack_num)
+
+def communicate(conn: socket.socket):
+
+    # Need to type this (probably can copy code)
+
+    return
 
 # This will be the function that is used for every communication with a client.
 # It is still a mess of stuff that will not be needed (from program 3), so I will continue to prune and clean it.
@@ -28,72 +40,27 @@ def client_communicate(conn: socket.socket):
         # Perform a 3-way handshake.
         try:
             # This should be close to how the data will be formatted, might need to modify it slightly.
-            (sequence_num, acknowledgement_num, (syn, ack, close)) = receive_header(conn)
-        except socket.error as exc:
-            logging.error('Packet recieve from client failed')
-            continue # Failed handshake drops connection
-        except ValueError as exc:
-            logging.error(exc) # This catches a version mismatch
-            continue
-        
-
-        # Create the acknowledgement packet.
-
-        # send hello packet to client
-        try:
-            conn.send(server_hello)
+            server_handshake(conn)
         except socket.error:
-            print("\nFailed to send.")
-            continue # Failed handshake drops connection
+            logging.error('Packet recieve from client failed')
+            return # Failed handshake drops connection
+        
 
         # Receive and unpack COMMAND packet:
         try:
-            version, message_type, message_length, command = receive_packet(conn)
-        except socket.error as exc:
-            logging.error('Packet recieve from client failed')
-            continue # Failed command drops connection
-        except ValueError as exc:
-            logging.error(exc) # This catches a version mismatch
-            continue
-
-        # Check if version is correct value
-        # if version != 17: 
-        #     print("VERSION MISMATCH. Return to listening.")
-        #     logging.info("VERSION MISMATCH. Return to listening.")
-        #     continue
-
-        print("VERSION ACCEPTED")
-        logging.info("VERSION ACCEPTED")
-
-        # Message Type = 1 --> LIGHT ON
-        if message_type == 1 and command == "LIGHTON":
-            print("EXECUTING SUPPORTED COMMAND: LIGHTON")
-            print("Returning SUCCESS")
-            logging.info("EXECUTING SUPPORTED COMMAND: LIGHTON")
-            success = 'SUCCESS'
-
-        # Message Type = 2 --> LIGHT OFF
-        elif message_type == 2 and command == "LIGHTOFF":
-            print("EXECUTING SUPPORTED COMMAND: LIGHTOFF")
-            print("Returning SUCCESS")
-            logging.info("EXECUTING SUPPORTED COMMAND: LIGHTOFF")
-            success = 'SUCCESS'
-
-        # Any other message type is not supported
-        else:
-            print("IGNORING UNKNOWN COMMAND: {}".format(command))
-            logging.info("RECEIVED UNKNOWN COMMAND: {}".format(command))
-            success = 'FAILURE'
-            
-        # create (server_success) packet
-        server_success = create_packet(VERSION, message_type, len(success), success)
-
-        logging.info('Returning {}'.format(success))
-        # send SUCCESS packet to client
-        try:
-            conn.send(server_success)
+            *header, command = receive_packet(conn)
         except socket.error:
-            print("\nFailed to send.")
+            logging.error('Packet recieve from client failed')
+            return # Failed command drops connection
+
+        # Log the interaction
+            
+        # Communicate until told to stop.
+        while True:
+            (client_seq_num, client_ack_num, ack, syn, fin, payload) = communicate(conn)
+
+            if (fin == 'Y'):
+                return
 
 
 
@@ -139,7 +106,7 @@ if __name__ == '__main__':
                         ## NOTE: If the threading line was also in the try with the accept we do not need the continue.
 
             try:
-                threading.Thread(target=client_communicate, args=(conn,)) # This opens a thread to handle the connections, while we still listen in the loop.
+                Thread(target=client_communicate, args=(conn,)) # This opens a thread to handle the connections, while we still listen in the loop.
             except:
                 pass # The exception handling for this will probably need to have one for a multithread failure, one for socket error,
                     ## and maybe 2 more (one for handling mis-comms, one for a general catch of anything that gets missed).

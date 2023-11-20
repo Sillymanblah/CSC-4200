@@ -16,7 +16,7 @@ def receive_header(conn: socket.socket, ack_num: int, header_format: str = '!2Ix
 
 def receive_packet(conn: socket.socket, header_format: str = '!3I'):
     # receive packet header from the function and break the tuple and message
-    (seq_num, ack_num, ack, syn, fin) = receive_header(conn, header_format)
+    (seq_num, ack_num, ack, syn, fin) = receive_header(conn, header_format) # Could also just do: header and *header later to decouple.
 
     # receive payload from a packet and decode
     client_payload = conn.recv(4)        #4 bytes = 32 bits
