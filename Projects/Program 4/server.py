@@ -18,6 +18,24 @@ from LED import BlinkLed
 
 HEADER_SIZE = 16
 
+def get_blink_data(payload: str):
+    pair = payload.split(",")
+
+    blinks = ""
+    for char in pair[0]:
+        if ( char.isdigit() ):
+            blinks += char
+    
+    dur = ""
+    for char in pair[1]:
+        if ( char.isdecimal() or char.isdigit() ):
+            dur += char
+
+    num_blinks = int( blinks )
+    duration = float( dur )
+
+    return ( num_blinks, duration )
+
 def server_handshake(conn: socket.socket):
 
     try:
@@ -88,11 +106,16 @@ def client_communicate(conn: socket.socket, addr):
 
             logging.info( "Completed handshake with {}".format( addr ) )
 
-            *nums, payload, end_connection = communicate( conn, *nums )
+            *nums, blink_payload, end_connection = communicate( conn, *nums )
+
+            blink_data = get_blink_data(blink_payload)
                 
             # Communicate until told to stop.
             while not end_connection:
                 *nums, payload, end_connection = communicate( conn, *nums )
+
+                if ( payload == ":Motion Detected" ):
+                    BlinkLed(*blink_data)
 
             logging.info( "Completed communication with {}".format( addr ) )
                 
