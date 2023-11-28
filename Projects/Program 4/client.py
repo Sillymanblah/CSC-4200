@@ -12,7 +12,7 @@ import random
 # Collecting all the shared functions from our extra files.
 from connection_handling import *
 from packet_handling import *
-# from PIR_Sensor import PollPIR
+from PIR_Sensor import PollPIR
 
 HEADER_SIZE = 16
 
@@ -110,13 +110,11 @@ if ( __name__ == '__main__' ):
 
         # Putting the whole thing in a try so we can catch and handle exceptions that break the flow at the end.
         try:
-            print("attempting handshake")
             ## We start by sending a handshake to the server:
             nums = client_handshake( client, addr )
 
             ## After that handshake we are good to work with the sensor.
             logging.info( 'Client connected to server at {}:{} and completed the handshake.'.format( args.server, args.port ) )
-            # print( 'Press any key to exit the program' )
 
             # Prepping the blink info.
             num_blinks = input( "Input the number of blinks: " )
@@ -132,14 +130,7 @@ if ( __name__ == '__main__' ):
             prev_sensed = True # Initial value set
             try:
                 while ( True ): # As long as we have not had an interrupt
-                    sensed = input("T/F: ")
-
-                    if sensed == "T":
-                        sensed = True
-                    elif sensed == "F":
-                        sensed = False
-                    else:
-                        continue
+                    sensed = PollPIR
 
                     # If our sensor state did not change, go to the next iteration
                     if prev_sensed == sensed:
@@ -148,7 +139,6 @@ if ( __name__ == '__main__' ):
                     # Otherwise, we can check to see if we got a True value
                     else:
                         if sensed == True: # If we sensed something new, send the communication.
-                            print (nums)
                             nums = communicate( client, addr, False, ':Motion Detected', *nums )
 
                         prev_sensed = sensed # Set this for the next iteration

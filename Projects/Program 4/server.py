@@ -9,12 +9,12 @@ import argparse
 import socket
 import logging
 # Between multiprocessing and multithreading, multithreading seems to work a little better for what we are doing here.
-from threading import Thread
+# from threading import Thread
 import random # Necessary to send SYN
 # Collecting our personal functions:
 from connection_handling import *
 from packet_handling import *
-# from LED import BlinkLed
+from LED import BlinkLed
 
 HEADER_SIZE = 16
 
@@ -101,9 +101,9 @@ def communicate(conn: socket.socket, seq_num: int, ack_num: int):
 
     # Building and sending packet in parts.
     header = build_header( seq_num, ack_num, b"Y", b"N", fin, HEADER_SIZE + len(command) )
-    payload = command.encode()
+    new_payload = command.encode()
     conn.sendto( header, client )
-    conn.sendto( payload, client )
+    conn.sendto( new_payload, client )
     seq_num += HEADER_SIZE + len(command)
 
     return ( seq_num, ack_num, payload, end_connection )
@@ -115,16 +115,13 @@ def client_communicate(conn: socket.socket, seq_num: int, ack_num: int):
         seq_num, ack_num, blink_payload, end_connection = communicate( conn, seq_num, ack_num )
 
         blink_data = get_blink_data(blink_payload)
-        
-        print(blink_data)
 
         # Communicate until told to stop.
         while not end_connection:
             seq_num, ack_num, payload, end_connection = communicate( conn, seq_num, ack_num )
 
             if ( payload == ":Motion Detected" ):
-                for blinks in range( blink_data[1] ):
-                    print( "Blinking with duration", blink_data[0] )
+                BlinkLed(*blink_data)
 
         logging.info( "Completed communication with {}".format( addr ) )
                 
