@@ -13,16 +13,17 @@ def build_header(**kwargs): # From what I have seen, the way to use kwargs is by
     data += struct.pack("!c", ack) #pack the ACK
     data += struct.pack("!c", syn) #pack the SYN
     data += struct.pack("!c", fin) #pack the FIN
+    data += struct.pack("!I", payload_size) # Pack payload size
 
     return data
 
 # This will handle the actual packet creation for sending across the network.
-def create_packet(seq_num, ack_num, ack, syn, fin, payload = ''):
+def create_packet(seq_num, ack_num, ack, syn, fin, payload_size, payload = ''):
     # Encode message
     payload_encoded = payload.encode()
         
     # Use the python struct module to create a fixed length header
-    header = build_header((seq_num, ack_num, ack, syn, fin))
+    header = build_header((seq_num, ack_num, ack, syn, fin, payload_size))
     
     #Combine header and message
     packet = header + payload_encoded

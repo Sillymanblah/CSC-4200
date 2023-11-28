@@ -16,6 +16,8 @@ from connection_handling import *
 from packet_handling import *
 from PIR_Sensor import PollPIR
 
+HEADER_SIZE = 16
+
 # Fun extra work
 def keyboard_wait():
     fd = sys.stdin.fileno()
@@ -32,75 +34,74 @@ def keyboard_wait():
 def client_handshake( conn: socket.socket ):
     try:
         # Create a sequence number for the communication.
-        seq_num = random.randint(1000, 10000) # Max size of seq_num is 4,000,000,000
+        seq_num = random.randint( 1000, 1000000 ) # Max size of seq_num is 4,000,000,000
 
         # Create header
-        header = build_header( seq_num=seq_num, ack_num=0, ack='N', syn='Y', fin='N' )
+        header = build_header( seq_num=seq_num, ack_num=0, ack='N', syn='Y', fin='N', payload_size=HEADER_SIZE )
 
         # Send client header
         conn.send( header )
 
         # Increment by bytes sent
-        seq_num += 12
+        seq_num += HEADER_SIZE
 
         # The loop is so that we keep trying to recieve a header until the correct one makes it to us.
         while True:
-            # Receive server header, validating incoming data with
-            server_header = receive_header( conn, seq_num )
-
             # Server header contains: server_seq (our ack_num), server_ack (our seq_num), ack, syn, fin.
-            ( server_seq_num, server_ack_num, ack, syn, fin ) = server_header
+            ( server_seq_num, server_ack_num, ack, syn, fin, size ) = receive_header( conn )
 
             # If the server's message matches our seq_num and has the syncronize bit set, set up our communication.
-            if ( ack == 'Y' and syn == 'Y' and fin == 'N' ):
-                ack_num = server_seq_num + 12
+            if ( ack == 'Y' and syn == 'Y' and fin == 'N' and server_ack_num == seq_num ):
+                ack_num = server_seq_num + size
                 break
 
         # Create new header
-        header = build_header( seq_num=seq_num, ack_num=ack_num, ack='Y', syn='N', fin='N' )
+        header = build_header( seq_num=seq_num, ack_num=ack_num, ack='Y', syn='N', fin='N', payload_size=HEADER_SIZE )
 
         # Send header
         conn.send( header )
         
         # Increment by bytes sent
-        seq_num += 12
+        seq_num += HEADER_SIZE
 
         # Returning our sequence and acknowledgement numbers for further communications.
-        return [ seq_num, ack_num ] # Using a list because it is mutable and therefore can continue to be modified.
+        return ( seq_num, ack_num ) # Using a list because it is mutable and therefore can continue to be modified.
 
     except socket.error:
         raise socket.error( 'Failed the 3 way handshake with the server.' )
     
-def communicate( conn: socket.socket, nums: list, command: str, *bits ):
-    if nums[0] is not int or nums[1] is not int:
+def communicate( conn: socket.socket, seq_num: int, ack_num: int, end: bool, command: str):
+    if seq_num is not int or ack_num is not int:
         raise ValueError( 'Bad call to the communicate function, list items are not numbers.' )
+    
+    if end:
+        fin = "Y"
+    else:
+        fin = "N"
+
     # Create the packet with our command.
-    packet = create_packet( nums[0], nums[1], *bits, command )
-    nums[0] += len( packet ) # Increments seq_num
+    packet = create_packet( seq_num=seq_num, ack_num=ack_num, ack="Y", syn="N", fin=fin, payload_size=HEADER_SIZE+len(command), payload=command )
+    seq_num += len( packet ) # Increments seq_num
 
     # Send the packet.
-    try:
-        conn.send( packet )
-    except socket.error as exc:
-        send_exc = socket.error( 'Packet send to server failed...\n' )
-        raise send_exc from exc
+    conn.send( packet )
 
     while ( True ):
-        try:
-            server_packet = receive_packet( conn, nums[0] )
-            break
-        except socket.error as exc:
-            receive_exc = socket.error( 'Packet recieve from server failed...\n' )
-            raise receive_exc from exc
-        except ValueError as exc:
-            logging.info( 'Ignoring invalid packet.', exc )
-        
+        *header, payload = receive_packet( conn )
+        # Server header contains: server_seq (our ack_num), server_ack (our seq_num), ack, syn, fin.
+        ( server_seq_num, server_ack_num, ack, syn, fin, size ) = header
 
-    # Break the tuple apart.
-    *header, payload = server_packet
+        # If the server's message matches our seq_num and has the syncronize bit set, set up our communication.
+        if ( ack == 'Y' and syn == 'N' and server_ack_num == seq_num ):
+            ack_num = server_seq_num + size
+            break
+
+    log_header( "RECV", *header )
 
     # Logging the response and gracefully ending.
     logging.info( 'Received message: "{}"'.format( payload ) )
+
+    return ( seq_num, ack_num ) # Returning the nums for further use.
 
 # Main implementation for the client:
 if ( __name__ == '__main__' ):
@@ -142,9 +143,16 @@ if ( __name__ == '__main__' ):
             logging.info( 'Client connected to server at {}:{} and completed the handshake.\nWaiting for sensor...'.format( args.server, args.port ) )
             print( 'Press any key to exit the program' )
 
+            # Prepping the blink info.
+            num_blinks = input( "Input the number of blinks: " )
+            duration = input( "Input the duration of each blink: " )
+            command = "blinks: {}, duration: {}".format( num_blinks, duration )
+
+            nums = communicate( client, *nums, False, command )
+
             # Opening a thread to keep track of a keyboard input to end the client
             exit_call = Thread( keyboard_wait )
-            exit_call.run()
+            exit_call.start()
 
             prev_sensed = PollPIR() # Initial value set
 
@@ -158,13 +166,13 @@ if ( __name__ == '__main__' ):
                 # Otherwise, we can check to see if we got a True value
                 else:
                     if sensed == True: # If we sensed something new, send the communication.
-                        communicate( conn=client, nums=nums, bits=('N', 'N', 'N'), command=':Motion Detected')
+                        nums = communicate( client, *nums, False, ':Motion Detected')
 
                     prev_sensed = sensed # Set this for the next iteration
                 
             # Once a keyboard interrupt is found, exit
             print( 'Ending program due to an interupt...' )
-            communicate( conn=client, nums=nums, bits=('N', 'N', 'Y') , command=':Closing Connection')
+            nums = communicate( client, *nums, True, ':Closing Connection')
 
         # Catching all our errors.
         except socket.error as exc:
